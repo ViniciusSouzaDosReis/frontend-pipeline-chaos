@@ -6,7 +6,7 @@ import { Component008 } from './Component008'
 // tokens from a design system service) — deliberately part of the "chaotic"
 // baseline pipeline this repo exists to document.
 async function simulateHeavySetup() {
-  await new Promise((resolve) => setTimeout(resolve, 400))
+  await new Promise((resolve) => setTimeout(resolve, 500))
 }
 
 describe('Component008', () => {

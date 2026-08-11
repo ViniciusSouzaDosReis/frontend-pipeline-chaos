@@ -7,7 +7,7 @@ import { join } from 'node:path'
 // existing files with unchanged content are simply overwritten in place.
 const COMPONENT_COUNT = 120
 const TESTS_PER_COMPONENT = 3
-const ARTIFICIAL_DELAY_MS = 400
+const ARTIFICIAL_DELAY_MS = 500
 
 const OUTPUT_DIR = join(process.cwd(), 'src', 'components', 'generated')
 
