@@ -10,15 +10,15 @@ Stack: Vite + React + TypeScript + Vitest + React Testing Library. Os componente
 
 ## 📊 Baseline
 
-> Preenchido manualmente após o primeiro run real do pipeline em `main`.
+> Medido no run real do pipeline em `main` — [ver run no Actions](https://github.com/ViniciusSouzaDosReis/frontend-pipeline-chaos/actions/runs/31495617149).
 
 | Etapa | Tempo |
 |---|---|
-| Total do pipeline | _pendente — preencher após o primeiro run_ |
-| `npm ci` | _pendente_ |
-| `npm run test` | _pendente_ |
+| Total do pipeline | 5min 09s (medido em 2026-08-11) |
+| `npm ci` | 4s |
+| `npm run test` (360 testes gerados + 1 sanity) | 4min 47s |
 
-Ver o run em: `Actions` → primeiro workflow em `main`.
+Detalhe: lint (0s) + typecheck (2s) + build (3s) somam pouco — praticamente todo o tempo do pipeline está concentrado na suíte de testes rodando single-thread com delay artificial.
 
 ## 🔥 Problemas conhecidos (roteiro de otimização)
 
