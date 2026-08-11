@@ -1,32 +1,50 @@
-# React + TypeScript + Vite
+# Frontend Pipeline Chaos
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+POC pública para estudar, na prática, como reduzir o tempo de um pipeline de testes front-end sem perder qualidade.
 
-Currently, two official plugins are available:
+## Contexto
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Este repositório não é um produto. É um cenário **deliberadamente lento e mal configurado**, construído para servir de baseline mensurável: primeiro documentamos o "antes" com números reais do GitHub Actions, depois aplicamos otimizações (paralelização/sharding, cache, testes afetados por diff) e comparamos o "depois" — também com números reais.
 
-## React Compiler
+Stack: Vite + React + TypeScript + Vitest + React Testing Library. Os componentes em `src/components/generated/` são sintéticos, gerados por `scripts/generate.ts`, no estilo de uma pequena biblioteca de Design System (botão/card/badge).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 📊 Baseline
 
-## Expanding the Oxlint configuration
+> Preenchido manualmente após o primeiro run real do pipeline em `main`.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+| Etapa | Tempo |
+|---|---|
+| Total do pipeline | _pendente — preencher após o primeiro run_ |
+| `npm ci` | _pendente_ |
+| `npm run test` | _pendente_ |
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+Ver o run em: `Actions` → primeiro workflow em `main`.
+
+## 🔥 Problemas conhecidos (roteiro de otimização)
+
+- [ ] **Sem cache de dependências** (`node_modules`/npm) — `setup-node` roda sem `cache: 'npm'`, então `npm ci` baixa tudo do zero a cada run.
+- [ ] **Sem cache de build** — o Vite não reaproveita nada entre runs.
+- [ ] **Pipeline totalmente sequencial** — lint → typecheck → build → test rodam um atrás do outro no mesmo job, quando várias dessas etapas são independentes entre si.
+- [ ] **Testes forçados a rodar single-thread** — `fileParallelism: false` em `vite.config.ts` desliga o paralelismo nativo do Vitest de propósito.
+- [ ] **Sem sharding** — a suíte inteira roda num único job, em vez de dividida entre múltiplos jobs em paralelo.
+- [ ] **Suíte inteira roda sempre** — mesmo mudando 1 componente, os ~360 testes rodam todos, sem seleção por diff.
+
+## Como rodar localmente
+
+```bash
+npm install
+npm run generate   # gera os componentes + testes sintéticos
+npm run test        # roda a suíte (lenta de propósito)
+npm run lint
+npm run typecheck
+npm run build
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Como recalibrar o tempo do baseline
+
+O alvo é o pipeline "antes" levar entre 5 e 8 minutos no GitHub Actions. Se o primeiro run real ficar muito fora dessa faixa:
+
+1. Ajuste `COMPONENT_COUNT`, `TESTS_PER_COMPONENT` ou `ARTIFICIAL_DELAY_MS` no topo de `scripts/generate.ts`.
+2. Rode `npm run generate` de novo (é idempotente — regenera os arquivos, sem duplicar).
+3. Rode `npm run test` localmente pra ter uma ideia do tempo antes de commitar.
+4. Commit e push — o pipeline dispara de novo em `main`.
