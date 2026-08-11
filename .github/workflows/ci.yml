@@ -64,6 +64,11 @@ jobs:
         shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v4
+        with:
+          # --changed diffs against the PR base with `git diff base...HEAD`
+          # (merge-base, three-dot) — a shallow checkout has no shared
+          # history to compute that from, so this needs full history.
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -72,10 +77,22 @@ jobs:
         with:
           path: node_modules
           key: node-modules-${{ hashFiles('package-lock.json') }}
-      - run: >
+
+      - name: Test changed files only (pull requests)
+        if: github.event_name == 'pull_request'
+        run: >
+          npm run test:unit:shard --
+          --changed origin/${{ github.base_ref }}
+          --shard=${{ matrix.shard }}/4
+          --outputFile=.vitest-reports/blob-${{ matrix.shard }}.json
+
+      - name: Test full suite (push to main)
+        if: github.event_name == 'push'
+        run: >
           npm run test:unit:shard --
           --shard=${{ matrix.shard }}/4
           --outputFile=.vitest-reports/blob-${{ matrix.shard }}.json
+
       - uses: actions/upload-artifact@v4
         with:
           name: vitest-blob-${{ matrix.shard }}
